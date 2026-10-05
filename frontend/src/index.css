@@ -1,18 +1,4 @@
-@import "tailwindcss";
-
-:root {
-  --bg-primary: #0b0f19;
-  --bg-secondary: #111827;
-  --bg-card: rgba(17, 24, 39, 0.85);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --accent-blue: #3b82f6;
-  --accent-purple: #8b5cf6;
-  --accent-emerald: #10b981;
-  --accent-amber: #f59e0b;
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
-}
-
+/* Base Layout & Custom Animations */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -20,106 +6,59 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: var(--bg-primary);
-  color: var(--text-main);
-  min-height: 100vh;
-  overflow-x: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #f1f5f9;
+  color: #1e293b;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Phone Frame Styles matching Image 1 */
+.phone-mockup {
+  width: 100%;
+  max-width: 390px;
+  height: 740px;
+  background: #ffffff;
+  border-radius: 48px;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.2), 0 0 0 12px #ffffff, 0 0 0 14px #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.phone-notch {
+  width: 150px;
+  height: 24px;
+  background: #ffffff;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+  z-index: 30;
+}
+
+.phone-speaker {
+  width: 50px;
+  height: 4px;
+  background: #cbd5e1;
+  border-radius: 2px;
+  margin: 8px auto 0;
 }
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.4);
+  background: #cbd5e1;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.7);
-}
-
-/* Glassmorphism helpers */
-.glass-panel {
-  background: rgba(17, 24, 39, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-card {
-  background: rgba(30, 41, 59, 0.5);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: all 0.2s ease-in-out;
-}
-.glass-card:hover {
-  border-color: rgba(99, 102, 241, 0.3);
-  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.4);
-}
-
-/* Markdown styling inside messages */
-.prose-custom {
-  line-height: 1.65;
-  font-size: 0.95rem;
-}
-.prose-custom p {
-  margin-bottom: 0.75rem;
-}
-.prose-custom p:last-child {
-  margin-bottom: 0;
-}
-.prose-custom ul, .prose-custom ol {
-  margin-left: 1.25rem;
-  margin-bottom: 0.75rem;
-}
-.prose-custom li {
-  margin-bottom: 0.25rem;
-}
-.prose-custom strong {
-  color: #fff;
-  font-weight: 600;
-}
-.prose-custom code {
-  background: rgba(0, 0, 0, 0.4);
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-  font-size: 0.85em;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  color: #93c5fd;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.prose-custom pre {
-  background: #0d1117;
-  padding: 0.85rem;
-  border-radius: 6px;
-  overflow-x: auto;
-  margin-bottom: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.prose-custom pre code {
-  background: transparent;
-  padding: 0;
-  border: none;
-  color: #e2e8f0;
-}
-.prose-custom h1, .prose-custom h2, .prose-custom h3, .prose-custom h4 {
-  color: #f8fafc;
-  margin-top: 1rem;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-}
-.prose-custom h3 {
-  font-size: 1.05rem;
-  color: #a5b4fc;
-}
-.prose-custom hr {
-  border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  margin: 1rem 0;
+  background: #94a3b8;
 }
