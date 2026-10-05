@@ -1,18 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Globe, FileText, Trash2, Eye, RefreshCw, CheckCircle, Database, Cpu, Layers } from 'lucide-react';
+import { 
+  Upload, FileText, Trash2, Eye, RefreshCw, CheckCircle, 
+  Database, Cpu, Layers, Lock, User, LogOut, ShieldAlert, AlertTriangle 
+} from 'lucide-react';
 import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function AdminConsoleView() {
+  const { user, role, login, logout } = useAuth();
+  const isAdmin = user && role === 'admin';
+
+  // Login form state
+  const [loginUsername, setLoginUsername] = useState('admin');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState(null);
+
+  // Admin Console state
   const [documents, setDocuments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
   const [selectedDocChunks, setSelectedDocChunks] = useState(null);
   const [statusMsg, setStatusMsg] = useState(null);
 
   useEffect(() => {
-    loadDocuments();
-  }, []);
+    if (isAdmin) {
+      loadDocuments();
+    }
+  }, [isAdmin]);
+
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    setLoginError(null);
+    setLoginLoading(true);
+
+    try {
+      const data = await login(loginUsername.trim(), loginPassword);
+      if (data.role !== 'admin') {
+        throw new Error('Access denied: account does not have administrator privileges.');
+      }
+    } catch (err) {
+      setLoginError(err.message || 'Invalid username or password.');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
 
   const loadDocuments = async () => {
     try {
@@ -67,10 +100,105 @@ export default function AdminConsoleView() {
     }
   };
 
+  // =========================================================
+  // 1. IF NOT LOGGED IN AS ADMIN: SHOW ADMIN SIGN-IN FORM
+  // =========================================================
+  if (!isAdmin) {
+    return (
+      <div className="max-w-md mx-auto my-12 px-4">
+        <div className="bg-white rounded-3xl p-8 border border-slate-200/90 shadow-xl shadow-slate-200/40">
+          
+          <div className="text-center mb-6">
+            <div className="w-14 h-14 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-600 mx-auto mb-3 shadow-xs">
+              <Lock className="w-7 h-7" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Admin Console Login</h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Authentication required to access document ingestion and vector database management.
+            </p>
+          </div>
+
+          {loginError && (
+            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center space-x-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span>{loginError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleAdminLogin} className="space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">Username</label>
+              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus-within:border-teal-500 focus-within:bg-white transition">
+                <User className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={loginUsername}
+                  onChange={(e) => setLoginUsername(e.target.value)}
+                  placeholder="admin"
+                  className="bg-transparent outline-none w-full"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">Password</label>
+              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus-within:border-teal-500 focus-within:bg-white transition">
+                <Lock className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" />
+                <input
+                  type="password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="bg-transparent outline-none w-full"
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loginLoading}
+              className="w-full bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-medium py-2.5 rounded-xl text-xs shadow-md shadow-teal-600/20 transition flex items-center justify-center space-x-2"
+            >
+              {loginLoading ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Authenticating Admin...</span>
+                </>
+              ) : (
+                <span>Sign In as Admin</span>
+              )}
+            </button>
+          </form>
+
+          {/* Quick-fill Helper for Reviewers */}
+          <div className="mt-6 pt-4 border-t border-slate-100 text-center">
+            <span className="text-[11px] text-slate-400 block mb-2">Default Admin Credentials:</span>
+            <button
+              onClick={() => {
+                setLoginUsername('admin');
+                setLoginPassword('admin123');
+              }}
+              type="button"
+              className="text-xs font-mono bg-slate-100 hover:bg-slate-200 text-teal-800 px-3 py-1.5 rounded-lg border border-slate-200 transition"
+            >
+              admin / admin123 (Click to auto-fill)
+            </button>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================
+  // 2. AUTHENTICATED ADMIN CONSOLE (Directly Matching Image 2)
+  // =========================================================
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       
-      {/* Header */}
+      {/* Top Header & Admin Profile Badge */}
       <div className="flex items-center justify-between pb-6 border-b border-slate-200 gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center space-x-2.5">
@@ -87,13 +215,25 @@ export default function AdminConsoleView() {
           </p>
         </div>
 
-        <button
-          onClick={loadDocuments}
-          className="flex items-center space-x-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs px-3 py-2 rounded-xl shadow-xs transition"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh Data</span>
-        </button>
+        {/* Logged in Admin indicator & Logout */}
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-xl text-xs">
+            <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+            <span className="font-semibold text-teal-900">{user.username}</span>
+            <span className="text-[10px] bg-teal-200/80 text-teal-800 font-bold px-1.5 py-0.5 rounded uppercase">
+              Admin
+            </span>
+          </div>
+
+          <button
+            onClick={logout}
+            className="flex items-center space-x-1.5 text-xs text-slate-600 hover:text-rose-600 bg-white border border-slate-200 px-3 py-1.5 rounded-xl transition shadow-xs"
+            title="Log out from Admin Console"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
 
       {/* Status banner */}

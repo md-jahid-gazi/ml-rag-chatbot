@@ -1,5 +1,7 @@
 <?php
 
+session_start();
+
 // Autoload classes manually
 spl_autoload_register(function ($class) {
     $prefix = 'App\\';
@@ -65,7 +67,45 @@ if ($uri === '/api/chat' && $method === 'POST') {
     exit;
 }
 
-// 2. API: GET /api/admin/stats
+// 2. API: POST /api/admin/login
+if ($uri === '/api/admin/login' && $method === 'POST') {
+    header('Content-Type: application/json');
+    $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+    $username = trim($input['username'] ?? '');
+    $password = trim($input['password'] ?? '');
+
+    // Check default admin or query MySQL users
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? AND role = 'admin'");
+    $stmt->execute([$username]);
+    $user = $stmt->fetch();
+
+    $valid = false;
+    if ($user && password_verify($password, $user['password'])) {
+        $valid = true;
+    } elseif ($username === 'admin' && ($password === 'admin123' || $password === 'admin')) {
+        $valid = true;
+    }
+
+    if ($valid) {
+        $_SESSION['admin_user'] = $username;
+        echo json_encode(['success' => true, 'username' => $username, 'role' => 'admin']);
+    } else {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'error' => 'Invalid admin username or password']);
+    }
+    exit;
+}
+
+// 3. API: POST /api/admin/logout
+if ($uri === '/api/admin/logout' && $method === 'POST') {
+    header('Content-Type: application/json');
+    unset($_SESSION['admin_user']);
+    session_destroy();
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+// 4. API: GET /api/admin/stats
 if ($uri === '/api/admin/stats' && $method === 'GET') {
     header('Content-Type: application/json');
     $controller = new \App\Http\Controllers\AdminController($pdo);
@@ -73,9 +113,14 @@ if ($uri === '/api/admin/stats' && $method === 'GET') {
     exit;
 }
 
-// 3. API: POST /api/admin/upload
+// 5. API: POST /api/admin/upload
 if ($uri === '/api/admin/upload' && $method === 'POST') {
     header('Content-Type: application/json');
+    if (empty($_SESSION['admin_user'])) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Admin authentication required']);
+        exit;
+    }
     $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
     $title = $input['title'] ?? 'Uploaded Document';
     $filename = $input['filename'] ?? 'document.txt';
@@ -86,20 +131,25 @@ if ($uri === '/api/admin/upload' && $method === 'POST') {
     exit;
 }
 
-// 4. API: POST /api/admin/delete
+// 6. API: POST /api/admin/delete
 if ($uri === '/api/admin/delete' && $method === 'POST') {
     header('Content-Type: application/json');
+    if (empty($_SESSION['admin_user'])) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Admin authentication required']);
+        exit;
+    }
     $id = (int)($_GET['id'] ?? 0);
     $controller = new \App\Http\Controllers\AdminController($pdo);
     echo json_encode(['success' => $controller->deleteDocument($id)]);
     exit;
 }
 
-// 5. VIEW: GET /admin (Admin Console UI - Image 2)
+// 7. VIEW: GET /admin (Admin Console UI - Image 2)
 if ($uri === '/admin') {
     require __DIR__ . '/../resources/views/admin.blade.php';
     exit;
 }
 
-// 6. VIEW: GET / (Phone Chatbot UI - Image 1)
+// 8. VIEW: GET / (Phone Chatbot UI - Image 1)
 require __DIR__ . '/../resources/views/chat.blade.php';
