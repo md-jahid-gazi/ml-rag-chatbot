@@ -84,6 +84,33 @@ class HybridVectorStore:
         removed = initial_len - len(self.chunks)
         logger.info(f"Removed {removed} chunks for Doc #{document_id}. Total remaining chunks: {len(self.chunks)}")
 
+    def sync_from_db(self, db):
+        """
+        Ensure all database chunks are indexed in the in-memory vector store.
+        Automatically picks up any document uploaded via Laravel or external tools.
+        """
+        try:
+            from backend.app.models.document import Document, DocumentChunk
+            indexed_ids = set(c.get("document_id") for c in self.chunks)
+            docs = db.query(Document).all()
+            for doc in docs:
+                if doc.id not in indexed_ids:
+                    chunks = db.query(DocumentChunk).filter(DocumentChunk.document_id == doc.id).order_by(DocumentChunk.chunk_index).all()
+                    chunks_data = [
+                        {
+                            "id": c.id,
+                            "chunk_index": c.chunk_index,
+                            "content": c.content,
+                            "token_count": c.token_count
+                        }
+                        for c in chunks
+                    ]
+                    if chunks_data:
+                        self.add_document_chunks(doc.id, doc.title, chunks_data)
+                        logger.info(f"Synchronized Doc #{doc.id} ('{doc.title}') into vector store ({len(chunks_data)} chunks).")
+        except Exception as e:
+            logger.warning(f"Vector store database sync error: {e}")
+
     def search(self, query: str, top_k: int = None) -> List[Dict[str, Any]]:
         """
         Perform semantic similarity search using Cosine Similarity / Dot Product.

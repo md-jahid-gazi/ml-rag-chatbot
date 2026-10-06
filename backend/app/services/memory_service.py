@@ -69,9 +69,9 @@ class ConversationMemoryService:
         Lightweight context enrichment: if user asks a pronoun or follow-up question
         ('it', 'they', 'the second one', 'why?'), append context from the last message.
         """
-        lower = query.lower().strip()
-        pronouns = [" it ", " its ", " that ", " this ", " they ", " why? ", " how? ", " what about "]
-        needs_context = any(p in f" {lower} " for p in pronouns) or len(lower.split()) <= 4
+        lower = f" {query.lower().strip()} "
+        referential_markers = [" it ", " its ", " that ", " this ", " they ", " them ", " there ", " what about it ", " why? ", " how come? "]
+        needs_context = any(m in lower for m in referential_markers)
 
         if needs_context and recent_messages:
             last_user_msg = next((m for m in reversed(recent_messages) if m.sender == "user"), None)

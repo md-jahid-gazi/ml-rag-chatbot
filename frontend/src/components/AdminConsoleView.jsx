@@ -10,8 +10,8 @@ export default function AdminConsoleView() {
   const { user, role, login, logout } = useAuth();
   const isAdmin = user && role === 'admin';
 
-  // Login form state
-  const [loginUsername, setLoginUsername] = useState('admin');
+  // Login form state (credentials are strictly confidential)
+  const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState(null);
@@ -134,7 +134,7 @@ export default function AdminConsoleView() {
                   type="text"
                   value={loginUsername}
                   onChange={(e) => setLoginUsername(e.target.value)}
-                  placeholder="admin"
+                  placeholder="Enter username"
                   className="bg-transparent outline-none w-full"
                   required
                 />
@@ -149,7 +149,7 @@ export default function AdminConsoleView() {
                   type="password"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Enter password"
                   className="bg-transparent outline-none w-full"
                   required
                 />
@@ -171,21 +171,6 @@ export default function AdminConsoleView() {
               )}
             </button>
           </form>
-
-          {/* Quick-fill Helper for Reviewers */}
-          <div className="mt-6 pt-4 border-t border-slate-100 text-center">
-            <span className="text-[11px] text-slate-400 block mb-2">Default Admin Credentials:</span>
-            <button
-              onClick={() => {
-                setLoginUsername('admin');
-                setLoginPassword('admin123');
-              }}
-              type="button"
-              className="text-xs font-mono bg-slate-100 hover:bg-slate-200 text-teal-800 px-3 py-1.5 rounded-lg border border-slate-200 transition"
-            >
-              admin / admin123 (Click to auto-fill)
-            </button>
-          </div>
 
         </div>
       </div>
@@ -252,7 +237,7 @@ export default function AdminConsoleView() {
       <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm mb-8">
         <h2 className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-5 flex items-center space-x-2">
           <span className="w-2 h-2 rounded-full bg-teal-500"></span>
-          <span>Knowledge Ingestion Pipeline (Image 2 System Flow)</span>
+          <span>Knowledge Ingestion Pipeline Architecture</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

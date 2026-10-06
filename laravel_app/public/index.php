@@ -113,7 +113,7 @@ if ($uri === '/api/admin/stats' && $method === 'GET') {
     exit;
 }
 
-// 5. API: POST /api/admin/upload
+// 5. API: POST /api/admin/upload (JSON/Direct)
 if ($uri === '/api/admin/upload' && $method === 'POST') {
     header('Content-Type: application/json');
     if (empty($_SESSION['admin_user'])) {
@@ -128,6 +128,53 @@ if ($uri === '/api/admin/upload' && $method === 'POST') {
 
     $controller = new \App\Http\Controllers\AdminController($pdo);
     echo json_encode($controller->uploadDocument($title, $filename, $content));
+    exit;
+}
+
+// 5b. API: POST /api/admin/upload-file (Multipart: PDF, TXT, MD, HTML, CSV, JSON)
+if ($uri === '/api/admin/upload-file' && $method === 'POST') {
+    header('Content-Type: application/json');
+    if (empty($_SESSION['admin_user'])) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Admin authentication required']);
+        exit;
+    }
+    if (empty($_FILES['file'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'No file was uploaded']);
+        exit;
+    }
+    $title = !empty($_POST['title']) ? trim($_POST['title']) : null;
+    $controller = new \App\Http\Controllers\AdminController($pdo);
+    $result = $controller->handleFileUpload($_FILES['file'], $title);
+    if (!empty($result['error'])) {
+        http_response_code(422);
+    }
+    echo json_encode($result);
+    exit;
+}
+
+// 5c. API: POST /api/admin/scrape-url (Web Scraper from live URL)
+if ($uri === '/api/admin/scrape-url' && $method === 'POST') {
+    header('Content-Type: application/json');
+    if (empty($_SESSION['admin_user'])) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Admin authentication required']);
+        exit;
+    }
+    $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+    $url = trim($input['url'] ?? '');
+    if (empty($url)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'URL cannot be empty']);
+        exit;
+    }
+    $controller = new \App\Http\Controllers\AdminController($pdo);
+    $result = $controller->scrapeAndIndexUrl($url);
+    if (!empty($result['error'])) {
+        http_response_code(422);
+    }
+    echo json_encode($result);
     exit;
 }
 

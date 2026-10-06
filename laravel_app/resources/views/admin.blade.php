@@ -15,9 +15,24 @@ $adminUsername = $_SESSION['admin_user'] ?? '';
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 50%, #f8fafc 100%);
         }
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
     </style>
 </head>
-<body class="min-h-screen text-slate-800 p-6 md:p-10">
+<body class="min-h-screen text-slate-800 p-4 sm:p-6 md:p-10 flex flex-col justify-between">
 
     <!-- Top Header & Switcher Bar -->
     <div class="max-w-6xl mx-auto mb-8 flex items-center justify-between flex-wrap gap-4">
@@ -38,10 +53,10 @@ $adminUsername = $_SESSION['admin_user'] ?? '';
             <div class="flex items-center space-x-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-200">
                 <span class="text-xs font-semibold text-slate-600">UI Mode:</span>
                 <a href="/" class="text-xs font-medium px-3 py-1 text-slate-600 hover:text-slate-900 transition">
-                    📱 Chat Widget (Image 1)
+                    📱 Chat Widget
                 </a>
                 <a href="/admin" class="text-xs font-medium px-3 py-1 bg-teal-600 text-white rounded-full shadow-sm">
-                    💻 Admin Console (Image 2)
+                    💻 Admin Console
                 </a>
             </div>
 
@@ -85,7 +100,8 @@ $adminUsername = $_SESSION['admin_user'] ?? '';
                         <input 
                             type="text" 
                             id="loginUsername" 
-                            value="admin"
+                            value=""
+                            placeholder="Enter username"
                             class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-teal-500 outline-none"
                             required
                         >
@@ -96,7 +112,7 @@ $adminUsername = $_SESSION['admin_user'] ?? '';
                         <input 
                             type="password" 
                             id="loginPassword" 
-                            placeholder="••••••••" 
+                            placeholder="Enter password" 
                             class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-teal-500 outline-none"
                             required
                         >
@@ -110,17 +126,6 @@ $adminUsername = $_SESSION['admin_user'] ?? '';
                         Sign In as Admin
                     </button>
                 </form>
-
-                <div class="mt-6 pt-4 border-t border-slate-100 text-center">
-                    <span class="text-[11px] text-slate-400 block mb-1.5">Default Credentials:</span>
-                    <button 
-                        type="button" 
-                        onclick="document.getElementById('loginUsername').value='admin'; document.getElementById('loginPassword').value='admin123';"
-                        class="text-xs font-mono bg-slate-100 hover:bg-slate-200 text-teal-800 px-3 py-1.5 rounded-lg border border-slate-200 transition"
-                    >
-                        admin / admin123 (Click to auto-fill)
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -160,11 +165,11 @@ $adminUsername = $_SESSION['admin_user'] ?? '';
         </script>
 
     <!-- ========================================================= -->
-    <!-- 2. IF LOGGED IN AS ADMIN: DISPLAY FULL ADMIN CONSOLE (Image 2) -->
+    <!-- 2. IF LOGGED IN AS ADMIN: DISPLAY FULL ADMIN CONSOLE -->
     <!-- ========================================================= -->
     <?php else: ?>
 
-        <!-- MAIN PIPELINE VISUALIZATION (Directly Recreating Image 2!) -->
+        <!-- MAIN PIPELINE VISUALIZATION -->
         <div class="max-w-6xl mx-auto bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200/50 mb-8">
             <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-6 flex items-center space-x-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
@@ -226,15 +231,85 @@ $adminUsername = $_SESSION['admin_user'] ?? '';
 
         <!-- INGESTION & DOCUMENTS MANAGEMENT -->
         <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left: Document Upload Box -->
-            <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+            <!-- Left: Document Ingestion Box -->
+            <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col">
                 <h2 class="text-sm font-bold text-slate-900 mb-1 flex items-center space-x-2">
                     <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    <span>Upload & Index Document</span>
+                    <span>Knowledge Ingestion Pipeline</span>
                 </h2>
-                <p class="text-xs text-slate-500 mb-4">Adds chunks to MySQL & vectors without retraining</p>
+                <p class="text-xs text-slate-500 mb-4">Ingest PDF, text, web files, or URLs without retraining</p>
 
-                <form id="uploadForm" class="space-y-4">
+                <!-- Ingestion Mode Tabs -->
+                <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl mb-4 text-xs font-semibold">
+                    <button type="button" onclick="switchIngestTab('file')" id="tabFile" class="flex-1 py-1.5 px-2 rounded-lg bg-white text-teal-700 shadow-xs transition text-center">
+                        📁 File Upload
+                    </button>
+                    <button type="button" onclick="switchIngestTab('url')" id="tabUrl" class="flex-1 py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition text-center">
+                        🌐 Web URL
+                    </button>
+                    <button type="button" onclick="switchIngestTab('text')" id="tabText" class="flex-1 py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition text-center">
+                        ✍️ Manual Text
+                    </button>
+                </div>
+
+                <!-- 1. FILE UPLOAD FORM (PDF, TXT, MD, HTML, CSV, JSON) -->
+                <form id="fileUploadForm" class="space-y-4">
+                    <div>
+                        <label class="text-xs font-semibold text-slate-700 block mb-1">Select File (PDF, TXT, MD, HTML, CSV, JSON)</label>
+                        <div class="border-2 border-dashed border-slate-200 hover:border-teal-400 rounded-2xl p-4 text-center cursor-pointer bg-slate-50/50 transition" onclick="document.getElementById('fileInput').click()">
+                            <svg class="w-7 h-7 text-teal-600 mx-auto mb-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                            <span id="fileLabel" class="text-xs text-slate-600 block font-medium">Click to choose file or drag & drop</span>
+                            <span class="text-[10px] text-slate-400 block mt-0.5">Supports PDF, Text (.txt, .md), Web (.html), CSV, JSON</span>
+                        </div>
+                        <input type="file" id="fileInput" class="hidden" accept=".pdf,.txt,.md,.markdown,.html,.htm,.csv,.json" onchange="handleFilePicked(this)" required>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-semibold text-slate-700 block mb-1">Document Title (Optional)</label>
+                        <input 
+                            type="text" 
+                            id="fileTitle" 
+                            placeholder="Auto-generated from filename if empty" 
+                            class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-teal-500 outline-none"
+                        >
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        id="fileUploadBtn"
+                        class="w-full bg-teal-600 hover:bg-teal-500 text-white font-medium py-2.5 rounded-xl text-xs shadow-md shadow-teal-600/20 transition flex items-center justify-center space-x-2"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        <span>Ingest & Index File</span>
+                    </button>
+                </form>
+
+                <!-- 2. WEB URL INGESTION FORM -->
+                <form id="urlScrapeForm" class="space-y-4 hidden">
+                    <div>
+                        <label class="text-xs font-semibold text-slate-700 block mb-1">Web Page URL</label>
+                        <input 
+                            type="url" 
+                            id="scrapeUrlInput" 
+                            placeholder="https://en.wikipedia.org/wiki/Machine_learning" 
+                            class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-teal-500 outline-none" 
+                            required
+                        >
+                        <span class="text-[10px] text-slate-400 block mt-1">Live web scraper extracts clean article text, removes boilerplate, and indexes chunks</span>
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        id="scrapeBtn" 
+                        class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl text-xs shadow-md shadow-indigo-600/20 transition flex items-center justify-center space-x-2"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                        <span>Scrape & Index Web Page</span>
+                    </button>
+                </form>
+
+                <!-- 3. MANUAL TEXT PASTE FORM -->
+                <form id="uploadForm" class="space-y-4 hidden">
                     <div>
                         <label class="text-xs font-semibold text-slate-700 block mb-1">Document Title</label>
                         <input 
@@ -251,7 +326,7 @@ $adminUsername = $_SESSION['admin_user'] ?? '';
                         <input 
                             type="text" 
                             id="docFilename" 
-                            placeholder="Account_Security.pdf" 
+                            placeholder="Account_Security.txt" 
                             class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-teal-500 outline-none"
                             required
                         >
@@ -317,6 +392,11 @@ $adminUsername = $_SESSION['admin_user'] ?? '';
             </div>
         </div>
 
+        <!-- Footer -->
+        <footer class="mt-12 py-6 text-center text-xs text-slate-400 border-t border-slate-200">
+            © MD. JAHID GAZI - 2026
+        </footer>
+
         <script>
             async function handleLogout() {
                 await fetch('/api/admin/logout', { method: 'POST' });
@@ -357,6 +437,109 @@ $adminUsername = $_SESSION['admin_user'] ?? '';
                 }
             }
 
+            function switchIngestTab(tab) {
+                const forms = {
+                    file: document.getElementById('fileUploadForm'),
+                    url: document.getElementById('urlScrapeForm'),
+                    text: document.getElementById('uploadForm')
+                };
+                const tabs = {
+                    file: document.getElementById('tabFile'),
+                    url: document.getElementById('tabUrl'),
+                    text: document.getElementById('tabText')
+                };
+
+                Object.keys(forms).forEach(k => {
+                    if (k === tab) {
+                        forms[k].classList.remove('hidden');
+                        tabs[k].className = 'flex-1 py-1.5 px-2 rounded-lg bg-white text-teal-700 shadow-xs transition text-center font-bold';
+                    } else {
+                        forms[k].classList.add('hidden');
+                        tabs[k].className = 'flex-1 py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition text-center font-medium';
+                    }
+                });
+                document.getElementById('uploadMsg').classList.add('hidden');
+            }
+
+            function handleFilePicked(input) {
+                if (input.files && input.files[0]) {
+                    const file = input.files[0];
+                    document.getElementById('fileLabel').innerText = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+                    if (!document.getElementById('fileTitle').value) {
+                        document.getElementById('fileTitle').value = file.name.replace(/\.[^/.]+$/, "");
+                    }
+                }
+            }
+
+            // 1. Handle File Upload (PDF, TXT, MD, HTML, CSV, JSON)
+            document.getElementById('fileUploadForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const fileInput = document.getElementById('fileInput');
+                if (!fileInput.files || !fileInput.files[0]) {
+                    alert('Please select a file to upload');
+                    return;
+                }
+                const btn = document.getElementById('fileUploadBtn');
+                const msg = document.getElementById('uploadMsg');
+                btn.disabled = true;
+                btn.innerText = 'Extracting, Chunking & Indexing...';
+
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('title', document.getElementById('fileTitle').value.trim());
+
+                try {
+                    const res = await fetch('/api/admin/upload-file', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Upload failed');
+                    msg.className = 'mt-3 text-xs p-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 block';
+                    msg.innerText = `Success! Ingested ${data.file_type.toUpperCase()} '${data.title}' with ${data.chunks_indexed} vector chunks.`;
+                    document.getElementById('fileUploadForm').reset();
+                    document.getElementById('fileLabel').innerText = 'Click to choose file or drag & drop';
+                    await loadAdminStats();
+                } catch (err) {
+                    msg.className = 'mt-3 text-xs p-2.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 block';
+                    msg.innerText = err.message;
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = 'Ingest & Index File';
+                }
+            });
+
+            // 2. Handle URL Web Scraping
+            document.getElementById('urlScrapeForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const url = document.getElementById('scrapeUrlInput').value.trim();
+                const btn = document.getElementById('scrapeBtn');
+                const msg = document.getElementById('uploadMsg');
+                btn.disabled = true;
+                btn.innerText = 'Scraping Web Page & Indexing...';
+
+                try {
+                    const res = await fetch('/api/admin/scrape-url', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: url })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Scraping failed');
+                    msg.className = 'mt-3 text-xs p-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 block';
+                    msg.innerText = `Success! Scraped & indexed '${data.title}' with ${data.chunks_indexed} chunks.`;
+                    document.getElementById('urlScrapeForm').reset();
+                    await loadAdminStats();
+                } catch (err) {
+                    msg.className = 'mt-3 text-xs p-2.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 block';
+                    msg.innerText = err.message;
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = 'Scrape & Index Web Page';
+                }
+            });
+
+            // 3. Handle Manual Text Upload
             document.getElementById('uploadForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const btn = document.getElementById('uploadBtn');

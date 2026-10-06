@@ -12,7 +12,24 @@ from backend.app.core.logger import logger
 class DocumentParser:
     @staticmethod
     def parse_pdf(file_bytes: bytes, filename: str) -> str:
-        """Extract text from PDF pages"""
+        """Extract clean, selectable text from PDF pages with multi-library fallback."""
+        text_parts = []
+        # Strategy 1: PyMuPDF (fitz) - robust layout, ligatures, and font encoding
+        try:
+            import fitz
+            doc = fitz.open(stream=file_bytes, filetype="pdf")
+            for idx, page in enumerate(doc):
+                page_text = page.get_text() or ""
+                clean_lines = [l.strip() for l in page_text.split("\n") if l.strip()]
+                joined = "\n".join(clean_lines)
+                if joined.strip():
+                    text_parts.append(f"--- [Page {idx + 1}] ---\n{joined.strip()}")
+            if text_parts:
+                return "\n\n".join(text_parts)
+        except Exception as e:
+            logger.warning(f"PyMuPDF parse failed for {filename}, trying pypdf: {e}")
+
+        # Strategy 2: pypdf fallback
         try:
             reader = PdfReader(io.BytesIO(file_bytes))
             text_parts = []
@@ -20,10 +37,26 @@ class DocumentParser:
                 page_text = page.extract_text() or ""
                 if page_text.strip():
                     text_parts.append(f"--- [Page {idx + 1}] ---\n{page_text.strip()}")
-            return "\n\n".join(text_parts)
+            if text_parts:
+                return "\n\n".join(text_parts)
         except Exception as e:
-            logger.error(f"Error parsing PDF {filename}: {str(e)}")
-            raise ValueError(f"Failed to parse PDF: {str(e)}")
+            logger.warning(f"pypdf parse failed for {filename}, trying pdfplumber: {e}")
+
+        # Strategy 3: pdfplumber fallback
+        try:
+            import pdfplumber
+            with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+                text_parts = []
+                for idx, page in enumerate(pdf.pages):
+                    txt = page.extract_text() or ""
+                    if txt.strip():
+                        text_parts.append(f"--- [Page {idx + 1}] ---\n{txt.strip()}")
+                if text_parts:
+                    return "\n\n".join(text_parts)
+        except Exception as e:
+            logger.error(f"All PDF parsers failed for {filename}: {e}")
+
+        raise ValueError(f"Could not extract readable text from PDF {filename}.")
 
     @staticmethod
     def parse_text(file_bytes: bytes) -> str:

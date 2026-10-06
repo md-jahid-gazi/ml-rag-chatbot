@@ -146,5 +146,29 @@ def delete_session(session_id: str, db: Session = Depends(get_db)):
     if session:
         db.delete(session)
         db.commit()
-        logger.info(f"Deleted chat session: {session_id}")
     return None
+
+@router.get("/suggestions")
+def get_suggested_questions(db: Session = Depends(get_db)):
+    """Return suggested questions, incorporating questions asked in previous chats by users"""
+    past_queries = db.query(ChatMessage.content)\
+        .filter(ChatMessage.sender == "user")\
+        .order_by(ChatMessage.id.desc())\
+        .limit(10)\
+        .all()
+
+    past_list = [q[0] for q in past_queries if len(q[0].strip()) > 3]
+
+    defaults = [
+        "Can I change my booking?",
+        "How do I reset my password?",
+        "Explain reparameterization trick in VAE",
+        "What is Multi-Head Self-Attention in Transformers?",
+        "What is Teacher Forcing in Seq2Seq models?"
+    ]
+
+    combined = []
+    for item in past_list + defaults:
+        if item not in combined:
+            combined.append(item)
+    return {"suggestions": combined[:5]}

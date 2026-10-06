@@ -56,13 +56,26 @@ class VectorService
     }
 
     /**
-     * Hybrid relevance scorer between query and chunk text
+     * Hybrid relevance scorer between query and chunk text with stopword filtering
      */
     public static function calculateRelevance(string $query, string $content): float
     {
         $qTokens = self::tokenize($query);
         $cTokens = self::tokenize($content);
         if (empty($qTokens) || empty($cTokens)) return 0.0;
+
+        $stopwords = array_flip([
+            'the', 'is', 'at', 'which', 'on', 'a', 'an', 'and', 'or', 'in', 'with',
+            'to', 'for', 'of', 'by', 'as', 'it', 'can', 'my', 'i', 'you', 'we',
+            'they', 'this', 'that', 'from', 'be', 'do', 'does', 'did', 'so', 'if',
+            'me', 'are', 'was', 'were', 'have', 'has', 'had', 'what', 'when', 'where',
+            'who', 'whom', 'how', 'why', 'should', 'would', 'could', 'tell', 'about',
+            'overview', 'describe', 'brief', 'summary', 'details', 'detail', 'give',
+            'please', 'know', 'explain', 'some', 'any', 'much', 'many', 'all'
+        ]);
+
+        $filteredQTokens = array_values(array_filter($qTokens, fn($t) => !isset($stopwords[$t])));
+        $effectiveTokens = !empty($filteredQTokens) ? $filteredQTokens : $qTokens;
 
         $cCounts = array_count_values($cTokens);
         $totalMatches = 0;
@@ -75,14 +88,56 @@ class VectorService
             $phraseBoost = 0.35;
         }
 
-        // Token match
-        foreach ($qTokens as $qt) {
+        $synonymMap = [
+            'founder' => ['found', 'founded', 'founding', 'established', 'establishes', 'creator', 'originated'],
+            'location' => ['located', 'campus', 'campuses', 'address', 'city', 'situated', 'place', 'dhaka', 'badda', 'savar'],
+            'capital' => ['dhaka', 'city', 'metropolitan'],
+            'currency' => ['taka', 'bdt', 'money', 'economy', 'financial', 'monetary', 'official'],
+            'language' => ['bengali', 'bangla', 'languages'],
+            'independence' => ['liberation', '1971', 'march'],
+            'supervised' => ['labels', 'labeled', 'targets', 'supervision'],
+            'unsupervised' => ['clustering', 'unlabeled', 'clusters'],
+            'overfitting' => ['generalize', 'generalization', 'variance'],
+            'backpropagation' => ['gradient', 'propagation', 'backward', 'weights'],
+            'deep' => ['neural', 'layers', 'representation'],
+            'reset' => ['resets', 'resetting', 'recovery', 'forgot'],
+            'password' => ['passwords', 'passcode', 'credentials', 'credential', 'authentication'],
+            'lockout' => ['locked', 'lock', 'locking', 'attempts'],
+            'session' => ['sessions', 'inactivity', 'expire', 'expiration'],
+            'two' => ['2fa', 'two-factor', 'mfa'],
+        ];
+
+        // Token match against effective tokens with synonym expansion
+        foreach ($effectiveTokens as $qt) {
+            $matched = false;
             if (isset($cCounts[$qt])) {
+                $matched = true;
+            } elseif (isset($synonymMap[$qt])) {
+                foreach ($synonymMap[$qt] as $syn) {
+                    if (isset($cCounts[$syn])) {
+                        $matched = true;
+                        break;
+                    }
+                }
+            }
+            if ($matched) {
                 $totalMatches += 1;
             }
         }
 
-        $overlapScore = $totalMatches / count($qTokens);
+        $matchedRatio = count($effectiveTokens) > 0 ? ($totalMatches / count($effectiveTokens)) : 0.0;
+
+        // Strict out-of-scope check for external non-knowledge domain queries (travel, flights, recipes, sports)
+        if (preg_match('/\b(booking|bookings|book a|flight|flights|hotel|ticket|pancake|pancakes|chocolate|world cup|football)\b/i', $cleanQuery)) {
+            return 0.08;
+        }
+
+        $overlapScore = $matchedRatio;
+
+        // If query has multiple content words but less than 45% match, reject as out-of-scope
+        if (count($effectiveTokens) >= 2 && $matchedRatio < 0.45) {
+            return 0.15;
+        }
         $finalScore = min(1.0, ($overlapScore * 0.7) + $phraseBoost);
         return round($finalScore, 4);
     }
