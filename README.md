@@ -4,7 +4,7 @@ A full-stack, enterprise-grade AI chatbot system with intelligent knowledge retr
 
 ---
 
-## 🌟 Key Highlights & Capabilities
+##  Key Highlights & Capabilities
 
 ### Core Requirements
 1. **Custom Knowledge Base Ingestion**: Pre-trained and indexable on medium-to-large custom corpora (PDFs, Markdown notes, text documents, CSV/JSON data, and live web scraping).
@@ -22,7 +22,7 @@ A full-stack, enterprise-grade AI chatbot system with intelligent knowledge retr
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 ```mermaid
 flowchart TD
@@ -70,7 +70,7 @@ flowchart TD
 
 ---
 
-## 📚 Machine Learning Theoretical Foundations (From Course Slides)
+##  Machine Learning Theoretical Foundations (From Course Slides)
 
 The system directly embodies the principles taught in the lecture modules:
 
@@ -89,7 +89,7 @@ The system directly embodies the principles taught in the lecture modules:
 
 ---
 
-## 🚀 Quick Start Guide
+##  Quick Start Guide
 
 ### Prerequisites
 - Python 3.10+ (tested on Python 3.13)
@@ -138,7 +138,7 @@ For testing and reviewing knowledge base administration:
 
 ---
 
-## 🧪 Running Automated Tests
+##  Running Automated Tests
 
 Run the comprehensive pytest suite verifying semantic grounding, out-of-scope fallback, chunking, and RBAC authentication:
 
@@ -159,7 +159,7 @@ tests/test_rag.py::test_auth_and_admin_protection PASSED
 
 ---
 
-## 📡 REST API Reference
+##  REST API Reference
 
 | Endpoint | Method | Role | Description |
 | :--- | :--- | :--- | :--- |
@@ -183,4 +183,4 @@ tests/test_rag.py::test_auth_and_admin_protection PASSED
 ---
 
 ## 👥 Contributors & Academic Attribution
-Developed as part of the BRAC University Machine Learning course curriculum.
+Developed Md. Jahid Gazi for Educational Purpose. 
